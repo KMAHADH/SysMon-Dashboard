@@ -37,9 +37,9 @@ Reads live hardware thermal data from native Windows & Linux thermal interfaces:
 ```bash
 /sys/class/thermal/thermal_zone0/
 ```
-
+```
 Windows Management Instrumentation (WMI)
-
+```
 
 ### ✅ Built-In Fallback Handling
 If in Linux thermal interfaces are unavailable (common in:
