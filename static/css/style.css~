@@ -1,0 +1,229 @@
+/* ==============================================================================
+   File Name     : style.css (Sysmon Dark Matrix UI)
+   Description   : Core design framework for the Sysmon Control Deck
+   ============================================================================== */
+
+:root {
+    --bg-app: #0f172a;
+    --bg-card: #1e293b;
+    --border-color: #334155;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --accent-blue: #38bdf8;
+    --accent-amber: #f59e0b;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-app);
+    color: var(--text-main);
+    padding-bottom: 2rem;
+}
+
+/* Navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 2rem;
+}
+
+.logo {
+    font-size: 1.2rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.sys-specs {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* Dashboard Wrapper Container */
+.dashboard-container {
+    max-width: 1400px;
+    margin: 1.5rem auto;
+    padding: 0 1.5rem;
+}
+
+/* Live Stream Status Banner */
+.status-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background-color: #111827;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.status-indicator.online {
+    background-color: #22c55e;
+    box-shadow: 0 0 8px #22c55e;
+}
+
+/* Core Dashboard Matrix Grid Configuration */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Core Card Structure */
+.metric-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.metric-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+}
+
+/* Gauge Displays */
+.gauge-container {
+    padding: 0.5rem 0;
+}
+
+.gauge-value {
+    font-size: 2.25rem;
+    font-weight: bold;
+    font-family: monospace, sans-serif;
+}
+
+.text-amber { color: var(--accent-amber); }
+.text-blue { color: var(--accent-blue); }
+.text-muted { color: var(--text-muted); }
+
+/* Progress Bar Visual Layouts */
+.progress-bar-bg {
+    background-color: #0f172a;
+    border-radius: 9999px;
+    height: 8px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    background-color: var(--accent-blue);
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-footer {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: auto;
+}
+
+/* Data Listing Blocks (Network Details, Services) */
+.data-list-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.data-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+/* Service Status Labels */
+.status-pill {
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    background-color: #475569;
+    color: #cbd5e1;
+}
+
+/* Bandwidth Layouts */
+.net-speed-container {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    padding-bottom: 0.25rem;
+}
+
+.speed-counter {
+    font-family: monospace;
+    font-weight: bold;
+    color: var(--text-main);
+}
+
+/* Package Manager List Structures */
+.package-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.pkg-item-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: var(--text-muted);
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.pkg-item {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.badge {
+    background-color: #334155;
+    color: #94a3b8;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-align: center;
+    width: max-content;
+}
+
+/* Incident Log Box Styles */
+Custom Command Console
+
+/* Responsive Structural Modifiers */
+@media (min-width: 768px) {
+    .grid-col-span-2 {
+        grid-column: span 2;
+    }
+}

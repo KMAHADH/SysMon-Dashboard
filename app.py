@@ -1,0 +1,248 @@
+#!/usr/bin/env python3
+# ==============================================================================
+# Script Name   : app.py (Sysmon Ultimate Cluster Engine)
+# Description   : Flask API tracking networks, services, multi-runtime packages,
+#                 kernel load vitals, and multi-terminal custom console arrays.
+# Author        : Khwaja Mahad Haq
+# ==============================================================================
+
+from flask import Flask, render_template, jsonify
+import psutil
+import platform
+import time
+import subprocess
+from datetime import datetime
+
+app = Flask(__name__)
+
+# --- Global Storage for Network Bandwidth Tracking ---
+last_net_check = time.time()
+last_bytes_sent = psutil.net_io_counters().bytes_sent
+last_bytes_recv = psutil.net_io_counters().bytes_recv
+
+# --- MULTI-CONSOLE DIAGNOSTIC COMMAND CONFIGURATION ---
+# You can customize these three strings to track any active Linux workflows!
+CUSTOM_COMMANDS = {
+    "cmd_1": {
+        "title": "Custom Command Console 1",
+        "string": "ps -eo pid,cmd,%mem --sort=-%mem | head -n 4"
+    },
+    "cmd_2": {
+        "title": "Custom Command Console 2",
+        "string": "nvidia-smi"
+    },
+    "cmd_3": {
+        "title": "Custom Command Console 3",
+        "string": "df -h"
+    }
+}
+
+def get_uptime():
+    boot_time = datetime.fromtimestamp(psutil.boot_time())
+    return str(datetime.now() - boot_time).split('.')[0]
+
+def get_system_temperature():
+    try:
+        temps = psutil.sensors_temperatures()
+        if 'cpu_thermal' in temps: return round(temps['cpu_thermal'][0].current, 1)
+        elif 'coretemp' in temps: return round(temps['coretemp'][0].current, 1)
+        elif 'k10temp' in temps: return round(temps['k10temp'][0].current, 1)
+        with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
+            return round(int(f.read().strip()) / 1000.0, 1)
+    except Exception:
+        return 0.0
+
+def get_active_network_details():
+    details = {"interface": "Disconnected", "ip": "N/A", "mac": "N/A"}
+    try:
+        gateways = psutil.net_if_addrs()
+        route_cmd = "ip route show default | awk '/default/ {print $5}'"
+        primary_iface = subprocess.check_output(route_cmd, shell=True).decode("utf-8").strip()
+        
+        if not primary_iface or primary_iface == "lo":
+            for iface in gateways.keys():
+                if iface != 'lo':
+                    primary_iface = iface
+                    break
+
+        if primary_iface:
+            details["interface"] = primary_iface
+            try:
+                with open(f"/sys/class/net/{primary_iface}/address", "r") as f:
+                    details["mac"] = f.read().strip().upper()
+            except Exception:
+                details["mac"] = "00:00:00:00:00:00"
+
+            if primary_iface in gateways:
+                for addr in gateways[primary_iface]:
+                    if addr.family == 2: # AF_INET
+                        details["ip"] = addr.address
+                        break
+    except Exception as e:
+        print(f"Network error: {str(e)}")
+    return details
+
+def check_service(service_name):
+    try:
+        cmd = ["systemctl", "is-active", service_name]
+        status = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode("utf-8").strip()
+        return "active" if status == "active" else "inactive"
+    except Exception:
+        return "missing"
+
+def get_total_installed_packages():
+    counts = {"apt": 0, "snap": 0, "flatpak": 0}
+    try:
+        counts["apt"] = int(subprocess.check_output("dpkg -l | tail -n +6 | wc -l", shell=True).decode("utf-8").strip())
+    except Exception: pass
+    try:
+        counts["snap"] = int(subprocess.check_output("snap list 2>/dev/null | tail -n +2 | wc -l", shell=True).decode("utf-8").strip())
+    except Exception: pass
+    try:
+        counts["flatpak"] = int(subprocess.check_output("flatpak list 2>/dev/null | wc -l", shell=True).decode("utf-8").strip())
+    except Exception: pass
+    return counts
+
+def get_upgradeable_packages():
+    counts = {"apt": 0, "snap": 0, "flatpak": 0}
+    try:
+        apt_query = subprocess.check_output("apt-get -s upgrade | grep -E '^Inst' | wc -l", shell=True, stderr=subprocess.DEVNULL)
+        counts["apt"] = int(apt_query.decode("utf-8").strip())
+    except Exception: pass
+    try:
+        snap_query = subprocess.check_output("snap refresh --list 2>/dev/null | tail -n +2 | wc -l", shell=True)
+        counts["snap"] = int(snap_query.decode("utf-8").strip())
+    except Exception: pass
+    try:
+        flatpak_query = subprocess.check_output("flatpak update --list 2>/dev/null | wc -l", shell=True)
+        counts["flatpak"] = max(0, int(flatpak_query.decode("utf-8").strip()) - 1)
+    except Exception: pass
+    return counts
+
+def get_recent_errors():
+    cmd = "tail -n 40 /var/log/syslog 2>/dev/null | grep -iE 'error|fail|critical|auth' | tail -n 3"
+    try:
+        output = subprocess.check_output(cmd, shell=True).decode("utf-8").strip()
+        if not output:
+            return ["No critical system alerts or errors logged."]
+        return output.split('\n')
+    except Exception:
+        return ["Log access restricted or syslog empty."]
+
+def execute_custom_command(command_string):
+    """Executes a target bash string and returns stdout rows safely."""
+    try:
+        output = subprocess.check_output(command_string, shell=True, stderr=subprocess.STDOUT).decode("utf-8").strip()
+        if not output:
+            return ["Command completed with zero active stream output lines."]
+        return output.split('\n')
+    except Exception as e:
+        return [f"Execution Tracking Failure: {str(e)}"]
+
+TOTAL_PACKAGES_CACHE = get_total_installed_packages()
+
+@app.route('/')
+def index():
+    system_info = {
+        "os": platform.system(),
+        "hostname": platform.node(),
+        "kernel": platform.release(),
+        "cpu_cores": psutil.cpu_count(logical=True),
+        "cpu_model": platform.processor() or "x86_64/ARM Node",
+        "total_pkgs": TOTAL_PACKAGES_CACHE
+    }
+    return render_template('index.html', system=system_info)
+
+@app.route('/api/metrics')
+def get_metrics():
+    global last_net_check, last_bytes_sent, last_bytes_recv
+    try:
+        now = time.time()
+        time_delta = now - last_net_check
+        net_counters = psutil.net_io_counters()
+        
+        bytes_sent_speed = (net_counters.bytes_sent - last_bytes_sent) / time_delta
+        bytes_recv_speed = (net_counters.bytes_recv - last_bytes_recv) / time_delta
+        
+        last_net_check = now
+        last_bytes_sent = net_counters.bytes_sent
+        last_bytes_recv = net_counters.bytes_recv
+
+        # Handle entropy checking safely across platforms
+        try:
+            entropy_val = int(open("/proc/sys/kernel/random/entropy_avail", "r").read().strip())
+        except Exception:
+            entropy_val = 4096
+
+        telemetry = {
+            "uptime": get_uptime(),
+            "cpu": {
+                "percent": psutil.cpu_percent(interval=None),
+                "threads": psutil.cpu_count(logical=True),
+                "physical_cores": psutil.cpu_count(logical=False) or "N/A"
+            },
+            "temperature_c": get_system_temperature(),
+            "memory": {
+                "percent": psutil.virtual_memory().percent,
+                "used_gb": round(psutil.virtual_memory().used / (1024**3), 2),
+                "total_gb": round(psutil.virtual_memory().total / (1024**3), 2)
+            },
+            "swap": {
+                "percent": psutil.swap_memory().percent,
+                "used_gb": round(psutil.swap_memory().used / (1024**3), 2),
+                "total_gb": round(psutil.swap_memory().total / (1024**3), 2)
+            },
+            "disk": {
+                "percent": psutil.disk_usage('/').percent,
+                "used_gb": round(psutil.disk_usage('/').used / (1024**3), 2),
+                "total_gb": round(psutil.disk_usage('/').total / (1024**3), 2)
+            },
+            "network_speed": {
+                "upload_kbps": round(bytes_sent_speed / 1024, 1),
+                "download_kbps": round(bytes_recv_speed / 1024, 1)
+            },
+            "network_totals": {
+                "total_sent_gb": round(net_counters.bytes_sent / (1024**3), 2),
+                "total_recv_gb": round(net_counters.bytes_recv / (1024**3), 2)
+            },
+            "network_details": get_active_network_details(),
+            "services": {
+                "ssh": check_service("ssh"),
+                "ufw": check_service("ufw"),
+                "cron": check_service("cron")
+            },
+            "upgrades": get_upgradeable_packages(),
+            "logs": get_recent_errors(),
+            
+            # KERNEL TASKS & CRYPTO ENTROPY VITALS
+            "vitals": {
+                "load_1m": round(psutil.getloadavg()[0], 2),
+                "load_5m": round(psutil.getloadavg()[1], 2),
+                "entropy": entropy_val
+            },
+            
+            # UPGRADED MULTI-COMMAND DATA PAYLOAD
+            "custom_commands": {
+                "cmd_1": {
+                    "label": CUSTOM_COMMANDS["cmd_1"]["title"],
+                    "string": CUSTOM_COMMANDS["cmd_1"]["string"],
+                    "output": execute_custom_command(CUSTOM_COMMANDS["cmd_1"]["string"])
+                },
+                "cmd_2": {
+                    "label": CUSTOM_COMMANDS["cmd_2"]["title"],
+                    "string": CUSTOM_COMMANDS["cmd_2"]["string"],
+                    "output": execute_custom_command(CUSTOM_COMMANDS["cmd_2"]["string"])
+                },
+                "cmd_3": {
+                    "label": CUSTOM_COMMANDS["cmd_3"]["title"],
+                    "string": CUSTOM_COMMANDS["cmd_3"]["string"],
+                    "output": execute_custom_command(CUSTOM_COMMANDS["cmd_3"]["string"])
+                }
+            }
+        }
+        return jsonify(telemetry), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)

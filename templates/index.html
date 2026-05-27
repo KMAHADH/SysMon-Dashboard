@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sysmon — Enterprise IT Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo">📊 Sysmon Enterprise Node Console</div>
+        <div class="sys-specs">
+            <span>System Status: <strong>Active</strong></span>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+        
+        <section class="status-banner">
+            <span class="status-indicator online"></span>
+            <span>Live Telemetry Stream Active | <strong>Uptime:</strong> <span id="uptime-val">Loading...</span></span>
+        </section>
+
+        <section class="metrics-grid">
+            
+            <div class="metric-card grid-col-span-2">
+                <h3>📋 System Specifications</h3>
+                <div class="data-list-block">
+                    <div class="data-row"><span>Node Hostname:</span> <strong class="text-blue">{{ system.hostname }}</strong></div>
+                    <div class="data-row"><span>Operating System:</span> <span>Linux ({{ system.os }})</span></div>
+                    <div class="data-row"><span>Kernel Version:</span> <span class="text-muted">{{ system.kernel }}</span></div>
+                    <div class="data-row"><span>CPU Architecture:</span> <span>{{ system.cpu_model }} ({{ system.cpu_cores }} Threads)</span></div>
+                </div>
+                <p class="card-footer">Static Node Infrastructure Profiles</p>
+            </div>
+
+            <div class="metric-card">
+                <h3>⚙️ Core Service Status</h3>
+                <div class="data-list-block">
+                    <div class="data-row"><span>Secure Shell (sshd):</span> <span id="srv-ssh" class="status-pill">Checking</span></div>
+                    <div class="data-row"><span>Firewall Layer (ufw):</span> <span id="srv-ufw" class="status-pill">Checking</span></div>
+                    <div class="data-row"><span>Task Scheduler (cron):</span> <span id="srv-cron" class="status-pill">Checking</span></div>
+                </div>
+                <p class="card-footer">Systemd Active Daemons Auditing</p>
+            </div>
+
+            <div class="metric-card">
+                <h3>🌡️ Core Temperature</h3>
+                <div class="gauge-container"><span class="gauge-value text-amber" id="temp-text">0.0°C</span></div>
+                <p class="card-footer">Hardware Target: thermal_zone0</p>
+            </div>
+
+            <div class="metric-card">
+                <h3>🖥️ CPU Utilization</h3>
+                <div class="gauge-container"><span class="gauge-value" id="cpu-text">0%</span></div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="cpu-bar" style="width: 0%;"></div></div>
+                <p class="card-footer" id="cpu-footer">Processing Core Threads...</p>
+            </div>
+
+            <div class="metric-card">
+                <h3>🧠 Memory Allocation</h3>
+                <div class="gauge-container"><span class="gauge-value" id="ram-text">0%</span></div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="ram-bar" style="width: 0%;"></div></div>
+                <p class="card-footer" id="ram-footer">Using 0.00 GB / 0.00 GB</p>
+            </div>
+
+            <div class="metric-card">
+                <h3>🔄 Swap Memory Space</h3>
+                <div class="gauge-container"><span class="gauge-value" id="swap-text">0%</span></div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="swap-bar" style="width: 0%;"></div></div>
+                <p class="card-footer" id="swap-footer">Using 0.00 GB / 0.00 GB</p>
+            </div>
+
+            <div class="metric-card">
+                <h3>💽 Storage Capacity (Root /)</h3>
+                <div class="gauge-container"><span class="gauge-value" id="disk-text">0%</span></div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="disk-bar" style="width: 0%;"></div></div>
+                <p class="card-footer" id="disk-footer">Using 0.00 GB / 0.00 GB</p>
+            </div>
+
+            <div class="metric-card">
+                <h3>🔌 Active Interface Details</h3>
+                <div class="data-list-block">
+                    <div class="data-row"><span>NIC Name:</span> <strong id="net-interface">Detecting...</strong></div>
+                    <div class="data-row"><span>IPv4 Address:</span> <strong id="net-ip" class="text-blue">0.0.0.0</strong></div>
+                    <div class="data-row"><span>Hardware MAC:</span> <strong id="net-mac">00:00:00:00:00:00</strong></div>
+                </div>
+                <p class="card-footer">Physical Link Adapter Config</p>
+            </div>
+
+            <div class="metric-card">
+                <h3>🌐 Bandwidth & Data Volume</h3>
+                <div class="net-speed-container">
+                    <div>📥 <strong>Down Speed:</strong> <span id="net-down" class="speed-counter">0.0 KB/s</span></div>
+                    <div>📤 <strong>Up Speed:</strong> <span id="net-up" class="speed-counter">0.0 KB/s</span></div>
+                </div>
+                <div class="data-list-block" style="border-top: 1px solid var(--border-color); padding-top: 0.5rem;">
+                    <div class="data-row"><span>Accumulated Received:</span> <span id="total-recv" class="text-muted">0.00 GB</span></div>
+                    <div class="data-row"><span>Accumulated Transmitted:</span> <span id="total-sent" class="text-muted">0.00 GB</span></div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <h3>📦 Package Manager Metrics</h3>
+                <div class="package-list">
+                    <div class="pkg-item-header">
+                        <span>Runtime</span><span>Installed</span><span>Pending</span>
+                    </div>
+                    <div class="pkg-item">
+                        <span>Native APT</span> <strong>{{ system.total_pkgs.apt }}</strong> <span id="pkg-apt" class="badge">0</span>
+                    </div>
+                    <div class="pkg-item">
+                        <span>Ubuntu Snap</span> <strong>{{ system.total_pkgs.snap }}</strong> <span id="pkg-snap" class="badge">0</span>
+                    </div>
+                    <div class="pkg-item">
+                        <span>Flatpak</span> <strong>{{ system.total_pkgs.flatpak }}</strong> <span id="pkg-flatpak" class="badge">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <h3>⚖️ System Load & Entropy</h3>
+                <div class="data-list-block">
+                    <div class="data-row"><span>Load Avg (1 Min):</span> <strong id="vital-load" class="text-blue">0.00</strong></div>
+                    <div class="data-row"><span>Load Avg (5 Min):</span> <span id="vital-load5">0.00</span></div>
+                    <div class="data-row"><span>Available Entropy:</span> <strong id="vital-entropy" class="text-amber">0</strong></div>
+                </div>
+                <p class="card-footer">Kernel Task Queue & Pool Metrics</p>
+            </div>
+
+            <div class="metric-card grid-col-span-2">
+                <h3>⚠️ Recent Incident Log Streams (/var/log/syslog)</h3>
+                <div class="log-stream-box" id="log-feed">
+                    <div class="log-line">Polling active kernel audit streams...</div>
+                </div>
+                <p class="card-footer">Real-time Diagnostic System Scraping</p>
+            </div>
+
+            <div class="metric-card grid-col-span-2">
+                <h3>💻 <span id="cmd1-label">Custom Command Console 1</span> (<span id="cmd1-string" class="text-blue">Loading...</span>)</h3>
+                <div class="log-stream-box" id="cmd1-feed">
+                    <div class="log-line">Waiting for engine runtime generation...</div>
+                </div>
+                <p class="card-footer">Live Subprocess Terminal Execution Monitor [Slot 1]</p>
+            </div>
+
+            <div class="metric-card grid-col-span-2">
+                <h3>💻 <span id="cmd2-label">Custom Command Console 2</span> (<span id="cmd2-string" class="text-blue">Loading...</span>)</h3>
+                <div class="log-stream-box" id="cmd2-feed">
+                    <div class="log-line">Waiting for engine runtime generation...</div>
+                </div>
+                <p class="card-footer">Live Subprocess Terminal Execution Monitor [Slot 2]</p>
+            </div>
+
+            <div class="metric-card grid-col-span-2">
+                <h3>💻 <span id="cmd3-label">Custom Command Console 3</span> (<span id="cmd3-string" class="text-blue">Loading...</span>)</h3>
+                <div class="log-stream-box" id="cmd3-feed">
+                    <div class="log-line">Waiting for engine runtime generation...</div>
+                </div>
+                <p class="card-footer">Live Subprocess Terminal Execution Monitor [Slot 3]</p>
+            </div>
+
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='js/monitor.js') }}"></script>
+</body>
+</html>
