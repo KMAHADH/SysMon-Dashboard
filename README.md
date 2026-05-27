@@ -221,7 +221,7 @@ Package queries execute through isolated worker threads to prevent:
 
 This project was built to strengthen practical experience with:
 
-- Linux systems administration
+- Linux & Windows (Cross Platform) systems administration
 - Flask backend development
 - asynchronous frontend design
 - subprocess management
@@ -233,7 +233,7 @@ This project was built to strengthen practical experience with:
 
 # 📸 Screenshots
 
-> Add screenshots or animated GIFs here.
+![SysMon Dashboard](screenshots/SysMon.png)
 
 ## Example
 
