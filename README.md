@@ -235,12 +235,6 @@ This project was built to strengthen practical experience with:
 
 ![SysMon Dashboard](screenshots/SysMon.png)
 
-## Example
-
-```md
-![Dashboard](screenshots/dashboard.png)
-```
-
 ---
 
 # 📁 Suggested Repository Structure
