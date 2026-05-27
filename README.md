@@ -1,6 +1,6 @@
 # 📊 SysMon-Dashboard (System Monitor & Console)
 
-> A lightweight real-time Linux telemetry dashboard built with **Python (Flask)** and **asynchronous JavaScript**.
+> A lightweight real-time Corss-Platform (Windows & Linux) telemetry dashboard built with **Python (Flask)** and **asynchronous JavaScript**.
 
 SysMon provides live system monitoring for:
 - **CPU utilization**
@@ -11,7 +11,7 @@ SysMon provides live system monitoring for:
 - **package manager statistics**
 - **multi-terminal diagnostics**
 
-Designed as a professional **Linux systems administration** and **infrastructure monitoring** portfolio project.
+Designed as a professional **Corss Platform (Windows & Linux) systems administration** and **infrastructure monitoring** portfolio project.
 
 ---
 
@@ -19,7 +19,7 @@ Designed as a professional **Linux systems administration** and **infrastructure
 
 ## 📈 Real-Time System Telemetry
 
-Monitor critical Linux system metrics directly from the browser:
+Monitor critical Windows & Linux system metrics directly from the browser:
 
 - **CPU utilization**
 - **RAM allocation**
@@ -32,14 +32,17 @@ Monitor critical Linux system metrics directly from the browser:
 
 ## 🌡️ Hardware Thermal Monitoring
 
-Reads live hardware thermal data from native Linux thermal interfaces:
+Reads live hardware thermal data from native Windows & Linux thermal interfaces:
 
 ```bash
 /sys/class/thermal/thermal_zone0/
 ```
 
+Windows Management Instrumentation (WMI)
+
+
 ### ✅ Built-In Fallback Handling
-If thermal interfaces are unavailable (common in:
+If in Linux thermal interfaces are unavailable (common in:
 - virtual machines
 - cloud instances
 - headless environments
@@ -50,8 +53,9 @@ If thermal interfaces are unavailable (common in:
 
 ## ⚙️ systemd Service Auditing
 
-Track active service states for critical Linux infrastructure daemons including:
+Track active service states for critical Windows  Linux infrastructure daemons including:
 
+Linux: 
 | Service | Purpose |
 |---|---|
 | `sshd` | Secure remote access |
@@ -106,6 +110,13 @@ Run multiple live diagnostic commands simultaneously inside the dashboard.
 - subprocess execution
 - shell utilities
 
+  ## Windows Interfaces
+- `WMI`
+- `winget`
+- `psutil`
+- subprocess execution
+- powershell utilities
+
 ---
 
 # 📋 Installation
@@ -121,7 +132,7 @@ cd SysMon-Dashboard
 
 ## 2️⃣ Create a Virtual Environment
 
-```bash
+```bash & powershell
 python3 -m venv venv
 source venv/bin/activate
 ```
@@ -133,12 +144,16 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
+```windows
+pip install -r requirements.txt
+pip install wmi pywin32
+```
 
 ---
 
 ## 4️⃣ Launch the Dashboard
 
-```bash
+```bash & powershell
 python3 app.py
 ```
 
